@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track My Location with Google Maps</title>
+    <title>Track My Location</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,10 +11,22 @@
             padding: 20px;
         }
 
-        #map-container {
-            height: 500px;
-            width: 100%;
-            margin-top: 20px;
+        .container {
+            margin-top: 50px;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .button:hover {
+            background-color: #45a049;
         }
 
         .output {
@@ -22,45 +34,20 @@
             font-size: 18px;
         }
     </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVl724KXXpMJSWZgN6ieocgjC9_mt3qc0"></script>
 </head>
 <body>
     <h1>Track My Location</h1>
-    <div class="output" id="location-output">Loading...</div>
-    <div id="map-container"></div>
+    <div class="container">
+        <button class="button" onclick="startTracking()">Start Tracking</button>
+        <button class="button" onclick="stopTracking()">Stop Tracking</button>
+        <div class="output" id="location-output">Click "Start Tracking" to track your location.</div>
+    </div>
 
     <script>
-        let map;
-        let marker;
         let watchId;
 
-        function initMap() {
-            // Initialize the map centered at an arbitrary location
-            map = new google.maps.Map(document.getElementById("map-container"), {
-                center: { lat: 0, lng: 0 },
-                zoom: 15,
-            });
-        }
-
-        function updateMap(latitude, longitude) {
-            const position = { lat: latitude, lng: longitude };
-
-            // Update marker position or create it
-            if (marker) {
-                marker.setPosition(position);
-            } else {
-                marker = new google.maps.Marker({
-                    position,
-                    map,
-                });
-            }
-
-            // Center the map on the new position
-            map.setCenter(position);
-        }
-
         function startTracking() {
-            const output = document.getElementById("location-output");
+            const output = document.getElementById('location-output');
 
             if (navigator.geolocation) {
                 watchId = navigator.geolocation.watchPosition(
@@ -68,12 +55,10 @@
                         const latitude = position.coords.latitude;
                         const longitude = position.coords.longitude;
 
-                        // Update the map and display the location
-                        updateMap(latitude, longitude);
                         output.innerHTML = `Latitude: ${latitude.toFixed(8)}<br>Longitude: ${longitude.toFixed(8)}`;
                     },
                     (error) => {
-                        output.innerHTML = "Error retrieving location. Please enable location services.";
+                        output.innerHTML = "Unable to retrieve your location. Please enable location services.";
                     }
                 );
             } else {
@@ -84,15 +69,9 @@
         function stopTracking() {
             if (watchId) {
                 navigator.geolocation.clearWatch(watchId);
-                document.getElementById("location-output").innerHTML = "Tracking stopped.";
+                document.getElementById('location-output').innerHTML = "Tracking stopped.";
             }
         }
-
-        // Initialize the map on page load
-        window.onload = function () {
-            initMap();
-            startTracking();
-        };
     </script>
 </body>
 </html>
