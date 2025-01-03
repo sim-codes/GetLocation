@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show My Location</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+
+        .output {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Find My Location</h1>
+    <div class="container">
+        <button class="button" onclick="getLocation()">Show My Location</button>
+        <div class="output" id="location-output">Click the button to see your location.</div>
+    </div>
+
+    <script>
+        function getLocation() {
+            const output = document.getElementById('location-output');
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+
+                        output.innerHTML = `Latitude: ${latitude.toFixed(8)}<br>Longitude: ${longitude.toFixed(8)}`;
+                    },
+                    (error) => {
+                        output.innerHTML = "Unable to retrieve your location. Please enable location services.";
+                    }
+                );
+            } else {
+                output.innerHTML = "Geolocation is not supported by your browser.";
+            }
+        }
+    </script>
+</body>
+</html>
