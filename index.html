@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Show My Location</title>
+    <title>Track My Location</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -36,18 +36,21 @@
     </style>
 </head>
 <body>
-    <h1>Find My Location</h1>
+    <h1>Track My Location</h1>
     <div class="container">
-        <button class="button" onclick="getLocation()">Show My Location</button>
-        <div class="output" id="location-output">Click the button to see your location.</div>
+        <button class="button" onclick="startTracking()">Start Tracking</button>
+        <button class="button" onclick="stopTracking()">Stop Tracking</button>
+        <div class="output" id="location-output">Click "Start Tracking" to track your location.</div>
     </div>
 
     <script>
-        function getLocation() {
+        let watchId;
+
+        function startTracking() {
             const output = document.getElementById('location-output');
 
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
+                watchId = navigator.geolocation.watchPosition(
                     (position) => {
                         const latitude = position.coords.latitude;
                         const longitude = position.coords.longitude;
@@ -60,6 +63,13 @@
                 );
             } else {
                 output.innerHTML = "Geolocation is not supported by your browser.";
+            }
+        }
+
+        function stopTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                document.getElementById('location-output').innerHTML = "Tracking stopped.";
             }
         }
     </script>
