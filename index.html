@@ -59,6 +59,12 @@
             background-color: #f5f5f5;
             border-radius: 5px;
             border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .point-box:hover {
+            background-color: #e0e0e0;
         }
 
         .point-box.active {
@@ -87,6 +93,7 @@
             border-radius: 3px;
             font-size: 12px;
             display: none;
+            z-index: 100;
         }
 
         .settings {
@@ -99,16 +106,30 @@
         }
 
         .export-section {
-            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .export-section .button {
+            width: fit-content;
         }
 
         .export-data {
             width: 100%;
-            max-width: 600px;
-            height: 100px;
-            margin: 10px auto;
+            height: 120px;
             padding: 10px;
             font-family: monospace;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            min-height: 100px;
         }
     </style>
 </head>
@@ -127,30 +148,30 @@
         <button class="button reset" onclick="resetPoints()">Reset Points</button>
         
         <div class="coordinates" id="points-container">
-            <div class="point-box" id="point-1">
+            <div class="point-box" id="point-1" onclick="selectPoint(1)">
                 <span>Point 1: <span class="coords">Not set</span></span>
-                <button class="copy-button" onclick="copyPointCoords(1)">Copy</button>
+                <button class="copy-button" onclick="copyPointCoords(1, event)">Copy</button>
             </div>
-            <div class="point-box" id="point-2">
+            <div class="point-box" id="point-2" onclick="selectPoint(2)">
                 <span>Point 2: <span class="coords">Not set</span></span>
-                <button class="copy-button" onclick="copyPointCoords(2)">Copy</button>
+                <button class="copy-button" onclick="copyPointCoords(2, event)">Copy</button>
             </div>
-            <div class="point-box" id="point-3">
+            <div class="point-box" id="point-3" onclick="selectPoint(3)">
                 <span>Point 3: <span class="coords">Not set</span></span>
-                <button class="copy-button" onclick="copyPointCoords(3)">Copy</button>
+                <button class="copy-button" onclick="copyPointCoords(3, event)">Copy</button>
             </div>
-            <div class="point-box" id="point-4">
+            <div class="point-box" id="point-4" onclick="selectPoint(4)">
                 <span>Point 4: <span class="coords">Not set</span></span>
-                <button class="copy-button" onclick="copyPointCoords(4)">Copy</button>
+                <button class="copy-button" onclick="copyPointCoords(4, event)">Copy</button>
             </div>
         </div>
 
         <div class="export-section">
-            <button class="button" onclick="exportPoints()">Export Points</button>
+            <button class="button" onclick="exportPoints()">Copy Points to Clipboard</button>
             <textarea class="export-data" id="export-data" readonly></textarea>
         </div>
 
-        <div class="output" id="location-output">Click "Capture Current Location" to set points.</div>
+        <div class="output" id="location-output">Click a point box or "Capture Current Location" to set points.</div>
     </div>
 
     <script>
@@ -162,12 +183,14 @@
             4: null
         };
 
-        function startCapture() {
-            if (currentPoint > 4) {
-                alert("All points have been set. Reset points to start over.");
-                return;
-            }
+        function selectPoint(pointNumber) {
+            currentPoint = pointNumber;
+            document.querySelectorAll('.point-box').forEach(box => box.classList.remove('active'));
+            document.getElementById(`point-${pointNumber}`).classList.add('active');
+            startCapture();
+        }
 
+        function startCapture() {
             const output = document.getElementById('location-output');
             
             if (navigator.geolocation) {
@@ -186,9 +209,7 @@
                         };
                         
                         setPoint(currentPoint, point);
-                        currentPoint++;
-                        
-                        output.innerHTML = `Point ${currentPoint-1} set successfully!`;
+                        output.innerHTML = `Point ${currentPoint} set successfully!`;
                         updateExport();
                     },
                     (error) => {
@@ -222,11 +243,7 @@
             const coordsSpan = pointBox.querySelector('.coords');
             coordsSpan.textContent = `${point.lat.toFixed(8)}, ${point.lon.toFixed(8)}`;
             
-            // Update active state
-            document.querySelectorAll('.point-box').forEach(box => box.classList.remove('active'));
-            if (currentPoint <= 4) {
-                document.getElementById(`point-${currentPoint}`).classList.add('active');
-            }
+            updateExport();
         }
 
         function resetPoints() {
@@ -239,14 +256,14 @@
             });
             
             document.getElementById('export-data').value = '';
-            document.getElementById('location-output').innerHTML = 'Points reset. Click "Capture Current Location" to set points.';
+            document.getElementById('location-output').innerHTML = 'Points reset. Click a point box or "Capture Current Location" to set points.';
             
-            // Reset active state
             document.querySelectorAll('.point-box').forEach(box => box.classList.remove('active'));
             document.getElementById('point-1').classList.add('active');
         }
 
-        function copyPointCoords(pointNumber) {
+        function copyPointCoords(pointNumber, event) {
+            event.stopPropagation(); // Prevent triggering the point-box click
             const point = points[pointNumber];
             if (point) {
                 const text = `${point.lat.toFixed(8)}, ${point.lon.toFixed(8)}`;
@@ -281,13 +298,27 @@
                 accuracy: Object.values(points).map(p => p ? p.accuracy : null)
             };
             
-            document.getElementById('export-data').value = JSON.stringify(exportData, null, 2);
+            const jsonString = JSON.stringify(exportData, null, 2);
+            document.getElementById('export-data').value = jsonString;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(jsonString).then(() => {
+                const output = document.getElementById('location-output');
+                output.innerHTML = 'Points data copied to clipboard!';
+                setTimeout(() => {
+                    output.innerHTML = 'Click a point box or "Capture Current Location" to set points.';
+                }, 2000);
+            });
         }
 
         function updateExport() {
-            if (currentPoint > 4) {
-                exportPoints();
-            }
+            const exportData = {
+                points: { ...points },
+                timestamp: new Date().toISOString(),
+                accuracy: Object.values(points).map(p => p ? p.accuracy : null)
+            };
+            
+            document.getElementById('export-data').value = JSON.stringify(exportData, null, 2);
         }
 
         // Initialize active state
