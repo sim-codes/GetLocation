@@ -51,12 +51,14 @@ cd GetLocation
 2. **Capturing Points**
    - Click "Capture Current Location" to record a point
    - The active point is highlighted in green
+   - Alternatively, click on a specific point box to select it before capturing
    - Repeat until all required points are captured
 
 3. **Managing Points**
    - Copy individual points using the "Copy" button
    - Reset all points using the "Reset Points" button
-   - Export all points in JSON format for use in other applications
+   - Name your location using the text field in the export section
+   - Copy all points to clipboard using the "Copy Points to Clipboard" button
 
 4. **High Accuracy Mode**
    - Toggle "High Accuracy" for more precise GPS coordinates
@@ -67,16 +69,15 @@ cd GetLocation
 Exported data follows this structure:
 ```json
 {
-  "points": {
-    "1": {
-      "lat": 12.34567890,
-      "lon": 98.76543210,
-      "accuracy": 10.5
-    },
-    // ... points 2-4
-  },
-  "timestamp": "2024-01-04T12:00:00.000Z",
-  "accuracy": [10.5, 8.2, 9.1, 11.3]
+  "name": "My Location Name",
+  "topLeftLat": 12.34567890,
+  "topLeftLon": 98.76543210,
+  "topRightLat": 12.34567891,
+  "topRightLon": 98.76543211,
+  "bottomLeftLat": 12.34567892,
+  "bottomLeftLon": 98.76543212,
+  "bottomRightLat": 12.34567893,
+  "bottomRightLon": 98.76543213
 }
 ```
 

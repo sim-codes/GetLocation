@@ -131,6 +131,15 @@
             resize: vertical;
             min-height: 100px;
         }
+        
+        .name-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -148,25 +157,26 @@
         <button class="button reset" onclick="resetPoints()">Reset Points</button>
         
         <div class="coordinates" id="points-container">
-            <div class="point-box" id="point-1" onclick="selectPoint(1)">
-                <span>Point 1: <span class="coords">Not set</span></span>
-                <button class="copy-button" onclick="copyPointCoords(1, event)">Copy</button>
+            <div class="point-box" id="point-topLeft" onclick="selectPoint('topLeft')">
+                <span>Top Left: <span class="coords">Not set</span></span>
+                <button class="copy-button" onclick="copyPointCoords('topLeft', event)">Copy</button>
             </div>
-            <div class="point-box" id="point-2" onclick="selectPoint(2)">
-                <span>Point 2: <span class="coords">Not set</span></span>
-                <button class="copy-button" onclick="copyPointCoords(2, event)">Copy</button>
+            <div class="point-box" id="point-topRight" onclick="selectPoint('topRight')">
+                <span>Top Right: <span class="coords">Not set</span></span>
+                <button class="copy-button" onclick="copyPointCoords('topRight', event)">Copy</button>
             </div>
-            <div class="point-box" id="point-3" onclick="selectPoint(3)">
-                <span>Point 3: <span class="coords">Not set</span></span>
-                <button class="copy-button" onclick="copyPointCoords(3, event)">Copy</button>
+            <div class="point-box" id="point-bottomLeft" onclick="selectPoint('bottomLeft')">
+                <span>Bottom Left: <span class="coords">Not set</span></span>
+                <button class="copy-button" onclick="copyPointCoords('bottomLeft', event)">Copy</button>
             </div>
-            <div class="point-box" id="point-4" onclick="selectPoint(4)">
-                <span>Point 4: <span class="coords">Not set</span></span>
-                <button class="copy-button" onclick="copyPointCoords(4, event)">Copy</button>
+            <div class="point-box" id="point-bottomRight" onclick="selectPoint('bottomRight')">
+                <span>Bottom Right: <span class="coords">Not set</span></span>
+                <button class="copy-button" onclick="copyPointCoords('bottomRight', event)">Copy</button>
             </div>
         </div>
 
         <div class="export-section">
+            <input type="text" id="location-name" class="name-input" placeholder="Enter Location Name">
             <button class="button" onclick="exportPoints()">Copy Points to Clipboard</button>
             <textarea class="export-data" id="export-data" readonly></textarea>
         </div>
@@ -175,18 +185,18 @@
     </div>
 
     <script>
-        let currentPoint = 1;
+        let currentPoint = 'topLeft';
         const points = {
-            1: null,
-            2: null,
-            3: null,
-            4: null
+            topLeft: null,
+            topRight: null,
+            bottomLeft: null,
+            bottomRight: null
         };
 
-        function selectPoint(pointNumber) {
-            currentPoint = pointNumber;
+        function selectPoint(pointId) {
+            currentPoint = pointId;
             document.querySelectorAll('.point-box').forEach(box => box.classList.remove('active'));
-            document.getElementById(`point-${pointNumber}`).classList.add('active');
+            document.getElementById(`point-${pointId}`).classList.add('active');
             startCapture();
         }
 
@@ -209,7 +219,7 @@
                         };
                         
                         setPoint(currentPoint, point);
-                        output.innerHTML = `Point ${currentPoint} set successfully!`;
+                        output.innerHTML = `${formatPointName(currentPoint)} set successfully!`;
                         updateExport();
                     },
                     (error) => {
@@ -235,11 +245,17 @@
                 output.innerHTML = "Geolocation is not supported by your browser.";
             }
         }
+        
+        function formatPointName(pointId) {
+            return pointId
+                .replace(/([A-Z])/g, ' $1')
+                .replace(/^./, str => str.toUpperCase());
+        }
 
-        function setPoint(pointNumber, point) {
-            points[pointNumber] = point;
+        function setPoint(pointId, point) {
+            points[pointId] = point;
             
-            const pointBox = document.getElementById(`point-${pointNumber}`);
+            const pointBox = document.getElementById(`point-${pointId}`);
             const coordsSpan = pointBox.querySelector('.coords');
             coordsSpan.textContent = `${point.lat.toFixed(8)}, ${point.lon.toFixed(8)}`;
             
@@ -247,7 +263,7 @@
         }
 
         function resetPoints() {
-            currentPoint = 1;
+            currentPoint = 'topLeft';
             Object.keys(points).forEach(key => {
                 points[key] = null;
                 const pointBox = document.getElementById(`point-${key}`);
@@ -259,16 +275,16 @@
             document.getElementById('location-output').innerHTML = 'Points reset. Click a point box or "Capture Current Location" to set points.';
             
             document.querySelectorAll('.point-box').forEach(box => box.classList.remove('active'));
-            document.getElementById('point-1').classList.add('active');
+            document.getElementById('point-topLeft').classList.add('active');
         }
 
-        function copyPointCoords(pointNumber, event) {
-            event.stopPropagation(); // Prevent triggering the point-box click
-            const point = points[pointNumber];
+        function copyPointCoords(pointId, event) {
+            event.stopPropagation();
+            const point = points[pointId];
             if (point) {
                 const text = `${point.lat.toFixed(8)}, ${point.lon.toFixed(8)}`;
                 navigator.clipboard.writeText(text).then(() => {
-                    showTooltip(`point-${pointNumber}`);
+                    showTooltip(`point-${pointId}`);
                 });
             }
         }
@@ -282,10 +298,10 @@
             tooltip.style.left = '50%';
             tooltip.style.transform = 'translateX(-50%)';
             tooltip.style.display = 'block';
-            
+
             element.style.position = 'relative';
             element.appendChild(tooltip);
-            
+
             setTimeout(() => {
                 tooltip.remove();
             }, 2000);
@@ -293,14 +309,20 @@
 
         function exportPoints() {
             const exportData = {
-                points: { ...points },
-                timestamp: new Date().toISOString(),
-                accuracy: Object.values(points).map(p => p ? p.accuracy : null)
+                name: document.getElementById('location-name').value || "Unnamed Location",
+                topLeftLat: points.topLeft ? points.topLeft.lat : null,
+                topLeftLon: points.topLeft ? points.topLeft.lon : null,
+                topRightLat: points.topRight ? points.topRight.lat : null,
+                topRightLon: points.topRight ? points.topRight.lon : null,
+                bottomLeftLat: points.bottomLeft ? points.bottomLeft.lat : null,
+                bottomLeftLon: points.bottomLeft ? points.bottomLeft.lon : null,
+                bottomRightLat: points.bottomRight ? points.bottomRight.lat : null,
+                bottomRightLon: points.bottomRight ? points.bottomRight.lon : null
             };
-            
+
             const jsonString = JSON.stringify(exportData, null, 2);
             document.getElementById('export-data').value = jsonString;
-            
+
             // Copy to clipboard
             navigator.clipboard.writeText(jsonString).then(() => {
                 const output = document.getElementById('location-output');
@@ -313,16 +335,22 @@
 
         function updateExport() {
             const exportData = {
-                points: { ...points },
-                timestamp: new Date().toISOString(),
-                accuracy: Object.values(points).map(p => p ? p.accuracy : null)
+                name: document.getElementById('location-name').value || "Unnamed Location",
+                topLeftLat: points.topLeft ? points.topLeft.lat : null,
+                topLeftLon: points.topLeft ? points.topLeft.lon : null,
+                topRightLat: points.topRight ? points.topRight.lat : null,
+                topRightLon: points.topRight ? points.topRight.lon : null,
+                bottomLeftLat: points.bottomLeft ? points.bottomLeft.lat : null,
+                bottomLeftLon: points.bottomLeft ? points.bottomLeft.lon : null,
+                bottomRightLat: points.bottomRight ? points.bottomRight.lat : null,
+                bottomRightLon: points.bottomRight ? points.bottomRight.lon : null
             };
             
             document.getElementById('export-data').value = JSON.stringify(exportData, null, 2);
         }
 
         // Initialize active state
-        document.getElementById('point-1').classList.add('active');
+        document.getElementById('point-topLeft').classList.add('active');
     </script>
 </body>
 </html>
