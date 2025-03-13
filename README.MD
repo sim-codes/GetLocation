@@ -89,15 +89,6 @@ Exported data follows this structure:
 - Mobile-responsive design
 - Cross-browser compatible
 
-## Browser Support
-
-- Chrome 5+
-- Firefox 3.5+
-- Safari 5+
-- Opera 10.6+
-- Edge 12+
-- Mobile browsers with geolocation support
-
 ## Contributing
 
 1. Fork the repository
@@ -118,3 +109,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For issues, feature requests, or contributions, please visit:
 [GitHub Repository](https://github.com/sim-codes/GetLocation)
+- Deployed on [Vercel](https://vercel.com)
